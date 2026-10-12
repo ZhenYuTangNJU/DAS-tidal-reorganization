@@ -1,0 +1,72 @@
+Essential processing code
+
+This folder contains nine processing entry scripts and four shared modules.
+Keep the directory structure intact. Modules in _common are imported by the
+entry scripts and do not need to be run separately. All plotting sections have
+been removed; results are exported as tables.
+
+01_Raw_DAS_and_Time_Series (two scripts)
+  00_DAS_raw_to_1min_RMS.py
+    Input: 200 Hz raw DAS .dat records.
+    Output: four site-specific one-minute RMS Excel workbooks.
+  extract_DAS_curve_envelope.py
+    Input: one-minute RMS workbooks.
+    Output: representative-channel time series and neighboring-channel envelopes.
+
+02_Spectral_and_Spatial_Analysis (three scripts, run in this order)
+  06_compute_tidal_band_metrics.py
+    Input: the four one-minute RMS workbooks.
+    Output: 06_all_channel_band_maps_output/all_channel_band_metrics.xlsx.
+  07_compute_band_correlation_and_lag.py
+    Input: the same RMS workbooks and concurrent observed tide.
+    Output: 07_band_limited_transfer_output/band_limited_transfer_metrics.xlsx.
+  09_compute_STI_and_spatial_block_bootstrap.py
+    Input: the 06 and 07 results in the same working directory.
+    First computes STI and geometry, then 20 m spatial blocks and 1000 stratified
+    spatial-block bootstrap replicates. Combines the former 09 and 13 scripts.
+    Outputs: 09_STI_geometry_models_v3_output/STI_and_geometry_model_results_v3.xlsx
+      and 13_spatial_block_analysis_v4_output/spatial_block_analysis_v4.xlsx.
+
+03_Tidal_Hysteresis (three scripts, run in this order)
+  step1_actual_tidal_stage.py
+    Input: one-minute RMS workbooks and concurrent observed tide.
+    Output: 12_NEW_actual_tidal_stage_output/actual_tidal_stage_DAS.xlsx.
+  step2_hysteresis_metrics.py
+    Input: RMS data and step1's time_phase table.
+    Matches rising/falling branches in 14 relative-water-level bins.
+    Output: 15_NEW_hysteresis_metrics_output/hysteresis_metrics_v2_upgraded.xlsx.
+  traditional_hysteresis_analysis.py
+    Input: the broadband_binned_curves worksheet from step2.
+    Computes absolute and signed loop areas and 10000 channel-bootstrap replicates.
+    Output: traditional_hysteresis_source_data.xlsx.
+    Defaults to the archived step2 workbook in 03_Inputs_and_Intermediate_Results.
+    For a newly rerun step2 result, change INPUT to that file.
+    Writes to Reprocessed_Outputs/Traditional_Hysteresis under the package root.
+
+04_Full_Period_Spectral_Analysis (one script)
+  analyze_full_period_spectra_harmonics.py
+    Input: Full_Period/DAS_Merged/*.xlsx and Full_Period/Tide_all.xlsx under
+      03_Inputs_and_Intermediate_Results.
+    Computes GLS spectra, harmonic fits, THI6, and 28-day-window statistics.
+    Output: full_period_spectral_harmonic_source_data.xlsx and a summary CSV in
+      Reprocessed_Outputs/Full_Period_Spectral_Analysis under the package root.
+
+WORKING DIRECTORY AND DEPENDENCIES
+
+For 06/07/09, choose the same independent working directory containing the four
+RMS inputs; 07 also asks for the tide workbook. Likewise, choose the same working
+directory for step1 and step2. Preserve the standard intermediate output folder
+names listed above. Avoid using a workspace containing multiple versions of
+identically named inputs, since some original functions select the first match.
+
+Python packages: numpy, pandas, scipy, openpyxl. GUI file selection requires
+tkinter. No matplotlib dependency or image output is present in this collection.
+Raw .dat inputs are not included; see the package README for scope and missing inputs.
+
+BAND CONFIGURATION
+
+_common/das_rbr_1min_common.py retains the original STI-source configuration.
+An alternative configuration is archived in 04_Manuscript_STI_Corrected_Bands.
+To adopt it, replace the shared module in a separate working copy and reprocess
+consistently. This renaming did not change frequency bands, formulas, seeds, or
+bootstrap counts. See the package README for the existing figure/text differences.
